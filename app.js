@@ -1,3 +1,6 @@
+'use strict';
+// jshint node:true
+
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -43,11 +46,10 @@ function onSwaggerSuccess(swagger,cb){
 
   //create sc definition
   var requestOptions = { parameterContentType: 'application/xml', scxmlDefinition: myscxml, StateChartName: SCXMLD_SC_NAME };
-
-  swagger.apis.default.createOrUpdateStatechartDefinition(requestOptions, onStatechartSuccess, onStatechartError);
+  swagger.default.createOrUpdateStatechartDefinition(requestOptions, onStatechartSuccess, onStatechartError);
 
   function onStatechartSuccess (data) {
-    console.log('Statechart saved, StateChartName:', data.headers.location);
+    console.log('Statechart saved, StateChartName:', data.headers.normalized.Location);
     installMiddlewares(swagger,cb);
   }
 
@@ -70,11 +72,11 @@ function installMiddlewares(swagger, cb){
     var phone = req.query.From;
     phone = Array(phone.length - 3).join('*') + phone.slice(phone.length - 3);
 
-    swagger.apis.default.getInstance({ StateChartName: SCXMLD_SC_NAME, InstanceId: id}, function (data) {
+    swagger.default.getInstance({ StateChartName: SCXMLD_SC_NAME, InstanceId: id}, function (data) {
       if(relativePath === '/call/ended') {
         console.log('Call ended');
 
-        swagger.apis.default.deleteInstance({ StateChartName: SCXMLD_SC_NAME, InstanceId: instanceId }, function () {
+        swagger.default.deleteInstance({ StateChartName: SCXMLD_SC_NAME, InstanceId: id }, function () {
           console.log('Deleted instance');
         }, function (data) {
           console.error('Error deleting instance', data.data.toString());
@@ -88,7 +90,7 @@ function installMiddlewares(swagger, cb){
     },function(data){
       //create
       console.log('Creating new instance');
-      swagger.apis.default.createNamedInstance({ StateChartName: SCXMLD_SC_NAME, InstanceId: id }, afterGetInstance, function(){
+      swagger.default.createNamedInstance({ StateChartName: SCXMLD_SC_NAME, InstanceId: id }, afterGetInstance, function(){
         console.log('Error creating instance');
         res.send();
       });
@@ -96,16 +98,16 @@ function installMiddlewares(swagger, cb){
 
     function afterGetInstance(data){
 
-      var eventName = relativePath.split('/').join('.');
+      var eventName = relativePath.substring(1).split('/').join('.');
       var event = { name: eventName, data: { params: req.query }};
 
-      swagger.apis.default.sendEvent(
+      swagger.default.sendEvent(
         {  
           StateChartName: SCXMLD_SC_NAME,
           InstanceId: id,
           Event: event
         }, function (data) {
-          res.send(data);
+          res.send(data.data.toString());
       }, function (data) {
           res.send(500,{message : data.data.toString()});
       });
