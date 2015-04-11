@@ -42,7 +42,7 @@ module.exports = function init(cb){
 
 function onSwaggerSuccess(swagger,cb){
 
-  var myscxml = fs.readFileSync('index.scxml','utf8');
+  var myscxml = fs.readFileSync('telephony.scxml','utf8');
 
   //create sc definition
   var requestOptions = { parameterContentType: 'application/xml', scxmlDefinition: myscxml, StateChartName: SCXMLD_SC_NAME };
@@ -72,7 +72,7 @@ function installMiddlewares(swagger, cb){
     var phone = req.query.From;
     phone = Array(phone.length - 3).join('*') + phone.slice(phone.length - 3);
 
-    swagger.default.getInstance({ StateChartName: SCXMLD_SC_NAME, InstanceId: id}, function (data) {
+    swagger.default.getInstance({ StateChartName: SCXMLD_SC_NAME, InstanceId: id }, function (data) {
       if(relativePath === '/call/ended') {
         console.log('Call ended');
 
