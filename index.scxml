@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" name="helloworld" datamodel="ecmascript" version="1.0">
+  <state id="a">
+    <transition target="a" event="twilio.call">
+      <response>
+        Hello world
+      </response>
+      <script>
+        _event.response.send('Hello world');
+      </script>
+    </transition>
+  </state>
+</scxml>
