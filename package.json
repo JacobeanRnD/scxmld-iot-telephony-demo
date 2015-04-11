@@ -12,7 +12,7 @@
     "express": "~4.11.1",
     "jade": "~1.9.1",
     "morgan": "~1.5.1",
-    "scxmld": "git://github.com/JacobeanRnD/SCXMLD.git#d722907158518feda832accc8112021bf438bf30",
+    "scxmld": "git://github.com/JacobeanRnD/SCXMLD.git#53f5312bd488bbadf03f571383a29e7fd9532975",
     "serve-favicon": "~2.2.0",
     "swagger-client": "^2.1.0-M1"
   }
