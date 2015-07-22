@@ -1,6 +1,6 @@
 {
-  "name": "scxmld-iot-telephony-demo",
-  "version": "0.0.0",
+  "name": "scxml-telephony-demo",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "start": "node app.js"
