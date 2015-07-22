@@ -7,7 +7,7 @@ var expresscion = require('expresscion'),
 
 var express = require('express');
 
-var hostUrl = 'http://localhost:' + 3000;
+var hostUrl = process.env.HOST || ('http://localhost:' + 3000);
 
 //start the server programmatically
 expresscion.initExpress(__dirname + '/telephony.scxml', function (err, app) {
@@ -62,7 +62,7 @@ expresscion.initExpress(__dirname + '/telephony.scxml', function (err, app) {
       });
     }
   });
-  app.listen(3000, function(){
+  app.listen(process.env.PORT, function(){
     //use the swagger js client library to set up singleton instance
     swagger = new SwaggerClient({
       url: hostUrl + '/api/v3/smaas.json',
