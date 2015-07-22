@@ -7,7 +7,7 @@ var expresscion = require('expresscion'),
 
 var express = require('express');
 
-var hostUrl = process.env.HOST || ('http://localhost:' + 3000);
+var hostUrl = process.env.HOST_URL || ('http://localhost:' + 3000);
 
 //start the server programmatically
 expresscion.initExpress(__dirname + '/telephony.scxml', function (err, app) {
