@@ -1,187 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scxml name="telephony" xmlns="http://www.w3.org/2005/07/scxml" version="1.0">
-    <datamodel>
+    <script src="archive.js"></script>
+    <script src="playPick.js"></script>
+    <script src="performSearch.js"></script>
 
-    </datamodel>
-
-    <script>
-    <![CDATA[
-        var https = require('https'),
-            urlModule = require('url');
-        var ar = "https://archive.org/";
-        var archive = {
-            getPicksOfTheDay: function(cb){
-                https.get(ar + "index.php?output=json", function(res){
-                    var s = "";
-                    res.on("data",function(data){
-                        s += data;
-                    });
-                    res.on("end",function(){
-                        var o = eval("(" + s + ")");    //this is evil, but there API doesn't return real JSON, so...
-                        cb(null,o.picks);
-                    });
-                }).on("error",function(err){cb(err);});
-            },
-            getDetail: function(identifier,cb){
-                https.get(ar + "details/" + identifier + "?output=json",function(res){
-                    var s = "";
-                    res.on("data",function(data){
-                        s += data;
-                    });
-                    res.on("end",function(){
-                        var o = JSON.parse(s);
-                        cb(null,o);
-                    });
-                }).on("error",function(err){cb(err);});
-            },
-            getUrlsFromDetail: function(detail,cb){
-                var server = detail.server;
-                var dir = detail.dir;
-                var urls = [];
-                for(var file in detail.files){
-                    //TODO: filter files to make sure it's an mp3
-                    var url = "https://" + server + dir + file;
-                    urls.push(url);
-                }
-                return urls;
-            }
-        };
-    ]]>
-    </script>
-
-    <script>
-    <![CDATA[
-        function playPick(res){
-            function handleError(err){
-                res.writeHead(500, {'Content-Type': 'text/plain'});
-                res.end(err.message);
-            }
-            archive.getPicksOfTheDay(function(err,picks){
-                if(err) return handleError(err);
-                archive.getDetail(picks.etree.identifier,function(err,detail){
-                    if(err) return handleError(err);
-                    var urls = archive.getUrlsFromDetail(detail).
-                                    filter(function(url){return url.match(/.mp3$/);}).
-                                    filter(function(url){return !url.match(/_vbr.mp3$/);});  //filter out vbr-encoded mp3s
-                    var result = '<Response>' +
-                            '<Say>Playing the archive dot org Live music picks</Say>' +
-                            '<Say>Press star to listen to the next song. Press a digit to return to the main menu.</Say>' +
-                            '<Say>' +  picks.etree.title + '</Say>' +
-                            '<Say>Please wait while the songs are loaded</Say>' +
-                            urls.map(function(url){return '<Gather numDigits="1" finishOnKey="*" action="started" method="GET" ><Play>' + url + "</Play></Gather>";})  + 
-                            '<Redirect method="GET">started</Redirect>' + 
-                        '</Response>';
-                    res.writeHead(200, {'Content-Type': 'application/xml'});
-                    res.end(result);
-                });
-            }); 
-        }
-    ]]>
-    </script>
-
-    <script>
-    <![CDATA[
-        var keypadMap = {
-            2 : ['a','b','c'],
-            3 : ['d','e','f'],
-            4 : ['g','h','i'],
-            5 : ['j','k','l'],
-            6 : ['m','n','o'],
-            7 : ['p','q','r','s'],
-            8 : ['t','u','v'],
-            9 : ['w','x','y','z']
-        };
-        var searchNumberToLabelMap = {
-            1 : "creator",  //artist
-            2 : "title"  //song
-        };
-        function performSearch(searchNumber,searchTerm,res){
-            //ok, first compute all combinations of letters from the search term.
-            var letters = [];
-            var failed = false;
-            for(var i = 0; i < searchTerm.length; i++){
-                var letter = keypadMap[searchTerm.charAt(i)];
-                if(!letter) {
-                    var errorResult =    '<Response>' +
-                                            '<Say>Please only enter digits between two and nine.</Say>' +
-                                            '<Redirect method="GET">invalid-digits</Redirect>' + 
-                                        '</Response>';
-                    res.writeHead(200, {'Content-Type': 'application/xml'});
-                    res.end(errorResult);
-                    failed = true;
-                    break;
-                }
-                letters.push(letter);
-            }
-            if(failed) return;
-            console.log("letters",letters);
-            var combinations = [];
-            for(i=0; i < letters[0].length; i++){
-                for(var j=0; j < letters[1].length; j++){
-                    for(var k=0; k < letters[2].length; k++){
-                        combinations.push([letters[0][i],letters[1][j],letters[2][k]]);
-                    }
-                }
-            }
-            //craft the query!
-            var combinationStrings = combinations.map(function(c){return c.join("") + "*";});
-            var q = searchNumberToLabelMap[searchNumber] + ':(' +   combinationStrings.join(" OR ")  + ') AND mediatype:etree';
-            var url = 'https://archive.org/advancedsearch.php?&fl[]=identifier,title&rows=10&output=json&q=' + encodeURIComponent(q); 
-            https.get(url,function(req){
-                var s = "";
-                req.on("data",function(data){
-                    s += data;
-                });
-                req.on("end",function(){
-                    var results = JSON.parse(s);
-                    //get the identifiers out and play the results
-                    //get details
-                    var docs = results.response.docs;
-                    var noMatchTxt = '<Response>' +
-                                        '<Say>Sorry, nothing matched that search.</Say>' +
-                                        '<Redirect method="GET">artist-not-found</Redirect>' + 
-                                    '</Response>';
-                    if(!docs.length){
-                        res.writeHead(200, {'Content-Type': 'application/xml'});
-                        res.end(noMatchTxt);
-                    }else{
-            
-                        var tryDoc = function(){
-                            var doc = docs.pop();
-                            if(doc){
-                                archive.getDetail(doc.identifier,function(err,detail){
-                                    var urls = archive.getUrlsFromDetail(detail).
-                                                filter(function(url){return url.match(/.mp3$/);}).
-                                                filter(function(url){return !url.match(/_vbr.mp3$/);});  //filter out vbr-encoded mp3s
-                                    if(urls.length){
-                                        console.log("urls to play",urls); 
-                                        var result = '<Response>' +
-                                                '<Say>Playing the songs you selected.</Say>' +
-                                                '<Say>Press star to listen to the next song. Press a digit to return to the main menu.</Say>' +
-                                                '<Say>' +  doc.title.replace("&"," and ") + '</Say>' +
-                                                '<Say>Please wait while the songs are loaded</Say>' +
-                                                urls.map(function(url){return '<Gather numDigits="1" finishOnKey="*" action="started" method="GET" ><Play>' + url + "</Play></Gather>";}).join("\n")  + 
-                                                '<Redirect method="GET">search-complete</Redirect>' + 
-                                            '</Response>';
-                                        res.writeHead(200, {'Content-Type': 'application/xml'});
-                                        res.end(result);
-                                    }else{
-                                        //try the next doc
-                                        tryDoc();
-                                    }
-                                });
-                            }else{
-                                res.writeHead(200, {'Content-Type': 'application/xml'});
-                                res.end(noMatchTxt);
-                            }
-                        };
-                        tryDoc();
-                    }
-                });
-            });
-        }
-    ]]>
-    </script>
     <state id="initial_default">
         <transition target="waiting_for_initial_request"/>
     </state>
@@ -194,18 +16,21 @@
         <state id="get_pick_input">
             <onentry>
                 <log label="entering root_menu"/>
-                <script>
-                <![CDATA[
-                    _event.response.send(  '<Response>' +
-                                                    '<Gather numDigits="1" action="number_received" method="GET">' +
-                                                    _event.data.prependToResponse +
-                                                    '   <Say>Welcome to archive.org music service</Say>' +
-                                                    '   <Say>Press 1 to listen to the archive dot org live music pick. Press 2 to search the archive dot org live music archive.</Say>' +
-                                                    '</Gather>' +
-                                                    '<Say>You didn\'t enter any input. Goodbye.</Say>' +
-                                                '</Response>');
-                ]]>
-                </script>
+                <send
+                  type="http://scxml.io/httpLifecycle"
+                  targetexpr="'scxml://response/' + _event.uuid"
+                  event="response" >
+                  <content><![CDATA[
+                    <Response>
+                        <Gather numDigits="1" action="number_received" method="GET">
+                        {{_event.data.prependToResponse}}
+                           <Say>Welcome to archive.org music service</Say>
+                           <Say>Press 1 to listen to the archive dot org live music pick. Press 2 to search the archive dot org live music archive.</Say>
+                        </Gather>
+                        <Say>You didn't enter any input. Goodbye.</Say>
+                    </Response>
+                  ]]></content>
+                </send>
             </onentry>
             <transition target="waiting_for_pick_input"/>
         </state>
@@ -228,7 +53,7 @@
         <onentry>
             <log label="entering playing_pick"/>
             <script>
-                playPick(_event.response);
+                playPick.call(this, _event.uuid);
             </script>
         </onentry>
 
@@ -245,17 +70,20 @@
         <state id="get_search_type_input">
             <onentry>
                 <log label="entering get_search_type_input"/>
-                <script>
-                <![CDATA[
-                    _event.response.send(  '<Response>' +
-                                                    _event.data.prependToResponse +
-                                                    '<Gather numDigits="1" action="number_received" finishOnKey="*" method="GET">' +
-                                                       '<Say>Press 1 to search for an artist. Press 2 to search for a title.</Say>' +
-                                                    '</Gather>' +
-                                                    '<Say>You didn\'t enter any input. Goodbye.</Say>' +
-                                                '</Response>');
-                ]]>
-                </script>
+                <send
+                  type="http://scxml.io/httpLifecycle"
+                  targetexpr="'scxml://response/' + _event.uuid"
+                  event="response" >
+                  <content><![CDATA[
+                    <Response>
+                        {{_event.data.prependToResponse}}
+                        <Gather numDigits="1" action="number_received" finishOnKey="*" method="GET">
+                           <Say>Press 1 to search for an artist. Press 2 to search for a title.</Say>
+                        </Gather>
+                        <Say>You didn\'t enter any input. Goodbye.</Say>
+                    </Response>
+                  ]]></content>
+                </send>
             </onentry>
             <transition target="waiting_search_type_input"/>
         </state>
@@ -277,16 +105,19 @@
 
     <state id="receiving_search_input">
         <onentry>
-            <script>
-            <![CDATA[
-                _event.response.send(  '<Response>' +
-                                                '<Gather numDigits="3" action="number_received" method="GET">' +
-                                                '   <Say>Press the first three digits of the name to search for.</Say>' +
-                                                '</Gather>' +
-                                                '<Say>You didn\'t enter any input. Goodbye.</Say>' +
-                                            '</Response>');
-            ]]>
-            </script>
+            <send
+              type="http://scxml.io/httpLifecycle"
+              targetexpr="'scxml://response/' + _event.uuid"
+              event="response" >
+              <content><![CDATA[
+                <Response>
+                    <Gather numDigits="3" action="number_received" method="GET">
+                       <Say>Press the first three digits of the name to search for.</Say>
+                    </Gather>
+                    <Say>You didn't enter any input. Goodbye.</Say>
+                </Response>
+              ]]></content>
+            </send>
         </onentry>
 
         <transition target="performing_search" event="call.number_received" cond="_event.data.params.Digits"> 
@@ -297,7 +128,7 @@
     <state id="performing_search">
         <onentry>
             <script>
-                performSearch(searchNumber,searchTerm,_event.response);
+                performSearch.call(this, searchNumber, searchTerm, _event.uuid);
             </script>
         </onentry>
         
