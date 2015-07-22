@@ -3,11 +3,14 @@
 
 var path = require('path');
 var expresscion = require('expresscion'),
+    urlModule = require('url'),
     SwaggerClient = require('swagger-client');
 
 var express = require('express');
 
-var hostUrl = process.env.HOST_URL || ('http://localhost:' + 3000);
+var hostUrl = process.env.HOST_URL || 'http://localhost:3000';
+var parsedHostUrl = urlModule.parse(hostUrl);
+var port = process.env.PORT || parsedHostUrl.port;
 
 //start the server programmatically
 expresscion.initExpress(__dirname + '/telephony.scxml', function (err, app) {
@@ -39,17 +42,36 @@ expresscion.initExpress(__dirname + '/telephony.scxml', function (err, app) {
       afterGetInstance(data);
     },function(data){
       //create
-      console.log('Creating new instance');
-      swagger.scxml.createNamedInstance({ InstanceId: id }, afterGetInstance, function(){
+      swagger.scxml.createNamedInstance({ InstanceId: id }, 
+      function(){
+        console.log('instance created',id);
+        //start the instance
+        swagger.scxml.sendEvent(
+          {  
+            InstanceId: id,
+            Event: {
+              name : "system.start"
+            }
+          }, function(){
+            console.log('instance started', id);
+            afterGetInstance();
+          }, 
+          function (data) {
+            res.send(500,{message : data.data.toString()});
+          });
+
+      },
+      function(){
         console.log('Error creating instance');
-        res.send();
+        res.send(500);
       });
     });
 
-    function afterGetInstance(data){
+    function afterGetInstance(){
 
       var eventName = relativePath.substring(1).split('/').join('.');
       var event = { name: eventName, data: { params: req.query }};
+      console.log('event',event);
 
       swagger.scxml.sendEvent(
         {  
@@ -62,11 +84,12 @@ expresscion.initExpress(__dirname + '/telephony.scxml', function (err, app) {
       });
     }
   });
-  app.listen(process.env.PORT, function(){
+  app.listen(port, function(){
     //use the swagger js client library to set up singleton instance
     swagger = new SwaggerClient({
       url: hostUrl + '/api/v3/smaas.json',
       success: function(){
+        console.log('Successfully created swagger client');
       }
     }); 
   });

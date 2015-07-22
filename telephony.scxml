@@ -9,7 +9,7 @@
     </state>
 
     <state id="waiting_for_initial_request">
-        <transition target="root_menu" event="call.started"/>
+        <transition target="root_menu" event="call.start"/>
     </state>
 
     <state id="root_menu">
@@ -91,7 +91,7 @@
             <transition target="receiving_search_input" event="call.number_received" cond="_event.data.params.Digits === '1' || _event.data.params.Digits === '2'"> 
                 <assign location="searchNumber" expr="_event.data.params.Digits"/>
             </transition>
-            <transition target="root_menu" event="call.started"/>
+            <transition target="root_menu" event="call.start"/>
             <transition target="get_search_type_input" event="call.number_received" cond="_event.data.params.Digits !== '1' &amp;&amp; _event.data.params.Digits !== '2'">
                 <log label="Entered wrong number"/>
                 <script>
