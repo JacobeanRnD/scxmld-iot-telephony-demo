@@ -14,6 +14,6 @@
     "morgan": "~1.5.1",
     "expresscion": "1.3.0",
     "serve-favicon": "~2.2.0",
-    "swagger-client": "^2.1.1",
+    "swagger-client": "^2.1.1"
   }
 }
