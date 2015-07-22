@@ -4,7 +4,7 @@ function playPick(uuid){
         //res.writeHead(500, {'Content-Type': 'text/plain'});
         self.send({
           type:'http://scxml.io/httpLifecycle',
-          targetexpr:'scxml://response/' + uuid,
+          target:'scxml://response/' + uuid,
           event:'response',
           data : err.message
         });
@@ -27,7 +27,7 @@ function playPick(uuid){
             //res.writeHead(200, {'Content-Type': 'application/xml'});
             self.send({
               type:'http://scxml.io/httpLifecycle',
-              targetexpr:'scxml://response/' + uuid,
+              target:'scxml://response/' + uuid,
               event:'response',
               data : result
             });

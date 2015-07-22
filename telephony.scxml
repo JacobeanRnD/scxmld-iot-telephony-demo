@@ -80,7 +80,7 @@
                         <Gather numDigits="1" action="number_received" finishOnKey="*" method="GET">
                            <Say>Press 1 to search for an artist. Press 2 to search for a title.</Say>
                         </Gather>
-                        <Say>You didn\'t enter any input. Goodbye.</Say>
+                        <Say>You didn't enter any input. Goodbye.</Say>
                     </Response>
                   ]]></content>
                 </send>
@@ -127,6 +127,7 @@
 
     <state id="performing_search">
         <onentry>
+            <send event="wait" targetexpr="'scxml://response/' + _event.uuid" type="http://scxml.io/httpLifecycle"></send>
             <script>
                 performSearch.call(this, searchNumber, searchTerm, _event.uuid);
             </script>

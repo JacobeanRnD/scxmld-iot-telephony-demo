@@ -29,8 +29,8 @@ function performSearch(searchNumber, searchTerm, uuid){
             //res.writeHead(200, {'Content-Type': 'application/xml'});
             self.send({
               type:'http://scxml.io/httpLifecycle',
-              targetexpr:'scxml://response/' + uuid,
-              event:'response',
+              target:'scxml://response/' + uuid,
+              name:'response',
               data : errorResult
             });
             failed = true;
@@ -91,8 +91,8 @@ function performSearch(searchNumber, searchTerm, uuid){
                                 //res.writeHead(200, {'Content-Type': 'application/xml'});
                                 self.send({
                                   type:'http://scxml.io/httpLifecycle',
-                                  targetexpr:'scxml://response/' + uuid,
-                                  event:'response',
+                                  target:'scxml://response/' + uuid,
+                                  name:'response',
                                   data : result
                                 });
                             }else{
@@ -104,8 +104,8 @@ function performSearch(searchNumber, searchTerm, uuid){
                         //res.writeHead(200, {'Content-Type': 'application/xml'});
                         self.send({
                           type:'http://scxml.io/httpLifecycle',
-                          targetexpr:'scxml://response/' + uuid,
-                          event:'response',
+                          target:'scxml://response/' + uuid,
+                          name:'response',
                           data : noMatchTxt
                         });
                     }

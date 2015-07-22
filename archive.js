@@ -38,3 +38,5 @@ var archive = {
         return urls;
     }
 };
+
+module.exports = archive;
