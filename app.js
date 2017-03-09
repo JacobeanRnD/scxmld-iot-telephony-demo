@@ -69,7 +69,10 @@ expresscion.initExpress(__dirname + '/telephony.scxml', function (err, app) {
 
     function afterGetInstance(){
 
-      var eventName = relativePath.substring(1).split('/').join('.');
+      var tmp = relativePath.substring(1).split('/');
+      var prefix = tmp[0];
+      var suffix = tmp[1];
+      var eventName = prefix + '.' + (suffix || 'start');
       var event = { name: eventName, data: { params: req.query }};
       console.log('event',event);
 
