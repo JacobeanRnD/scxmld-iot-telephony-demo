@@ -15,10 +15,6 @@ var port = process.env.PORT || parsedHostUrl.port;
 //start the server programmatically
 expresscion.initExpress(__dirname + '/telephony.scxml', function (err, app) {
   var swagger;
-  app.use('/app',express.static(path.join(__dirname, './app')));
-  app.get('/',function(req,res){
-    res.json({"twilio-protocol-adapter" : "1.0.0"});
-  });
   app.get('/call/*',function(req, res){
     var id = req.query.CallSid;
     var relativePath = req.path;
