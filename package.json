@@ -15,5 +15,8 @@
     "expresscion": "1.6.2",
     "serve-favicon": "~2.2.0",
     "swagger-client": "^2.1.1"
+  },
+  "engines": {
+    "node": "6.6.0"
   }
 }
