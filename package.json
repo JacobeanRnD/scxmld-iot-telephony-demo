@@ -12,7 +12,7 @@
     "express": "~4.11.1",
     "jade": "~1.9.1",
     "morgan": "~1.5.1",
-    "expresscion": "1.4.0",
+    "expresscion": "1.6.2",
     "serve-favicon": "~2.2.0",
     "swagger-client": "^2.1.1"
   }
