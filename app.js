@@ -14,6 +14,7 @@ var port = process.env.PORT || parsedHostUrl.port;
 
 //start the server programmatically
 expresscion.initExpress(__dirname + '/telephony.scxml', function (err, app) {
+  if(err) return console.error(err);
   var swagger;
   app.get('/call/*',function(req, res){
     var id = req.query.CallSid;
