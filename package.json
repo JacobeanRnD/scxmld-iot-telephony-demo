@@ -1,6 +1,6 @@
 {
   "name": "scxml-telephony-demo",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "scripts": {
     "start": "node app.js"
@@ -12,7 +12,7 @@
     "express": "~4.11.1",
     "jade": "~1.9.1",
     "morgan": "~1.5.1",
-    "expresscion": "1.6.2",
+    "expresscion": "1.6.3",
     "serve-favicon": "~2.2.0",
     "swagger-client": "^2.1.1"
   },
